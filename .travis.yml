@@ -1,0 +1,18 @@
+language: generic 
+sud: required
+services:
+  - docker
+
+before_install:
+  - docker build -t miodragcdocker/react-test -f ./client/Dockerfile.dev ./client
+
+script: 
+  - docker run -e CI=true miodragcdocker/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t miodragcdocker/multi-client ./client
+  - docker build -t miodragcdocker/multi-nginx ./nginx
+  - docker build -t miodragcdocker/multi-server ./server
+  - docker build -t miodragcdocker/multi-worker ./worker
+
+
