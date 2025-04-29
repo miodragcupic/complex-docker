@@ -1,0 +1,27 @@
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - main # check your repo, your default branch might be master!
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker build -t miodragcdocker/react-test-up -f ./client/Dockerfile.dev ./client
+      - run: docker run -e CI=true miodragcdocker/react-test-up npm test
+
+      - run: docker build -t miodragcdocker/multi-client-up ./client
+      - run: docker build -t miodragcdocker/multi-nginx-up ./nginx
+      - run: docker build -t miodragcdocker/multi-server-up ./server
+      - run: docker build -t miodragcdocker/multi-worker-up ./worker
+
+      - run: docker push miodragcdocker/multi-client-up
+      - run: docker push miodragcdocker/multi-nginx-up
+      - run: docker push miodragcdocker/multi-server-up
+      - run: docker push miodragcdocker/multi-worker-up
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
